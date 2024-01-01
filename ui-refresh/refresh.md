@@ -60,7 +60,7 @@ A B两个部分在代码中也分别对应两个部分，A部分我们需要使�
 
 
 
-![](C:\Users\liyk1\Desktop\android_project_learning\文章\ui-refresh\hi_refresh-uml.png)
+![](..\hi_refresh-uml.png)
 
 
 
