@@ -28,6 +28,14 @@ https://www.bilibili.com/video/BV1d54y1d7y7/?p=1&spm_id_from=pageDriver
 
 ## 下拉刷新组件的设计
 
+### 效果
+
+可以见同一个文件夹下的录屏
+
+
+
+### 拆解
+
 让我们从一个简单的下拉刷新组件需要做到什么，来分析该如何设计下拉刷新组件。
 
 当一个列表滑动到顶部时，我们下拉一段距离X，
@@ -46,6 +54,8 @@ https://www.bilibili.com/video/BV1d54y1d7y7/?p=1&spm_id_from=pageDriver
 A B两个部分在代码中也分别对应两个部分，A部分我们需要使用GestureDetector 来使我们的组件跟着用户的下滑而下滑，B部分我们则需要使用onScroller来实现回弹效果。
 
 如果说得详细一些，那就是在下拉刷新组件的dispatchTouchEvent中，当用户未松开手之前，控制权限交由GestureDetector，用户松手之后，控制权限则交由onScroller。
+
+
 
 ### 术语规范
 
