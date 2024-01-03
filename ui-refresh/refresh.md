@@ -1,4 +1,6 @@
-# 下拉刷新组件
+# 下拉刷新组件详解
+
+
 
 源码：https://github.com/LiYaokun97/ui-framework
 
@@ -58,9 +60,9 @@ A B两个部分在代码中也分别对应两个部分，A部分我们需要使�
 
 ### UML类图
 
-
-
 ![](hi_refresh-uml.png)
+
+
 
 
 
