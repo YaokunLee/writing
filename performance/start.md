@@ -1,32 +1,26 @@
-# 安卓冷启动优化
-
-
+# 安卓冷启动优化 - 异步初始化启动器
 
 源码：https://github.com/AILanguageQuizCard/LanguageAILearning/tree/lyk/start_opt 只需要看到start_opt库里的内容即可
 
 建议跟着源码来理解下面的内容
 
-
-
-## 前置知识
+## **前置知识**
 
 IdleHandler
 
 拓扑排序
 
+## **组件设计**
 
-
-## 组件设计
-
-### 效果
+### **效果**
 
 将10次平均启动时间，从825ms优化到了785ms
 
-### 术语解释
+### **术语解释**
 
 启动时间：从application的attachBaseContext方法作为计时起点，到首屏RecyclerView首个item被渲染出来作为计时终点
 
-### 分析
+### **分析**
 
 对于在启动时需要初始化的任务，它们根据不同的分类标准，可以分为
 
@@ -55,15 +49,13 @@ IdleHandler
 
 对于类别三，我们写了一个DelayInitDispatcher的调度器，直接将空闲任务放到DelayInitDispatcher中执行即可
 
-
-
-### 源码详解
+### **我们是怎么实现类别一 类别二的处理的？**
 
 使用如下：
 
 在Application的onCreate方法中，初始化TaskDispatcher并加入所有task
 
-```java
+```Java
     @Override
     public void onCreate() {
         super.onCreate();
@@ -101,12 +93,11 @@ public class InitFakeTask2 extends Task {
         return arrayList;
     }
 }
-
 ```
 
 直接看到start方法：
 
-```java
+```Java
     @UiThread
     public void start() {
         mStartTime = System.currentTimeMillis();
@@ -126,14 +117,13 @@ public class InitFakeTask2 extends Task {
         }
         DispatcherLog.i("task analyse cost startTime cost " + (System.currentTimeMillis() - mStartTime));
     }
-
 ```
 
 TaskSortUtil.getSortResult 会返回拓扑排序的结果，sendAndExecuteAsyncTasks方法中，将会按照拓扑排序的结果来执行任务
 
 看到sendAndExecuteAsyncTasks
 
-```java
+```Java
 private void sendAndExecuteAsyncTasks() {
     for (Task task : mAllTasks) {
         if (task.onlyInMainProcess() && !sIsMainProcess) {
@@ -152,7 +142,7 @@ private void sendAndExecuteAsyncTasks() {
 
 如果是在子线程中执行的任务，就直接放入线程池中执行，runOn()返回的是我们自定义的线程池
 
-```java
+```Java
 private void sendTaskReal(final Task task) {
     if (task.runOnMainThread()) {
         mMainThreadTasks.add(task);
@@ -181,7 +171,7 @@ private void sendTaskReal(final Task task) {
 
 再看到注释2，这里是我们自定义的DispatchRunnable，它继承自Runnable，看到下面它的run方法，它会先调用任务的waitToSatisfy()，也就是注释3，里面调用的是Task内部的CountDownLatch 的await方法，于是该线程会一直等待，直到它依赖的任务完成，会调用CountDownLatch 的countdown。当所有任务都完成时，会进入try代码块，执行run方法。执行完后，会satisfyChildren唤醒后续任务。
 
-```java
+```Java
 public class DispatchRunnable implements Runnable {
     private Task mTask;
     private TaskDispatcher mTaskDispatcher;
@@ -250,6 +240,47 @@ public class DispatchRunnable implements Runnable {
     }
 
 }
-
 ```
 
+## 怎么对类别三进行处理的？
+
+我们实现了一个DelayInitDispatcher 
+
+```Java
+public class DelayInitDispatcher {
+
+    private Queue<Task> mDelayTasks = new LinkedList<>();
+
+    private MessageQueue.IdleHandler mIdleHandler = new MessageQueue.IdleHandler() {
+        @Override
+        public boolean queueIdle() {
+            if(mDelayTasks.size()>0){
+                Task task = mDelayTasks.poll();
+                new DispatchRunnable(task).run();
+            }
+            return !mDelayTasks.isEmpty();
+        }
+    };
+
+    public DelayInitDispatcher addTask(Task task){
+        mDelayTasks.add(task);
+        return this;
+    }
+
+    public void start(){
+        Looper.myQueue().addIdleHandler(mIdleHandler);
+    }
+}
+```
+
+\>>>> 插入
+
+如果当 执行注册的 IdleHandler时，突然有用户响应事件进入，需要主线程响应，怎么办？
+
+当执行注册的 `IdleHandler` 时，如果突然有用户响应事件或其他消息进入 `MessageQueue`，需要主线程响应，Android 的消息循环机制会确保这些事件得到及时处理。这是通过 `MessageQueue` 和 `Looper` 的设计来保证的：
+
+1. 事件和消息的优先级：`MessageQueue` 中的消息和事件都有自己的执行时间戳。当新的事件或消息被投递到队列时，它们会根据时间戳（如果有的话）或者入队顺序被安排执行。通常，用户的交互事件，如触摸、点击等，会立即被投递到队列中并具有高优先级。
+2. 中断 IdleHandler 执行：`IdleHandler` 的执行发生在消息队列空闲时。如果在执行 `IdleHandler` 的 `queueIdle()` 方法过程中，新的消息或事件被加入到 `MessageQueue`，这个新加入的消息或事件将会打断 `IdleHandler` 的执行流程。`Looper` 会优先处理这些新的消息或事件，确保UI响应的流畅性和及时性。
+3. 继续执行 IdleHandler：一旦消息队列中的新消息或事件被处理完毕，如果主线程再次变为空闲状态，`MessageQueue` 会继续检查并执行剩余的或新注册的 `IdleHandler`。这意味着 `IdleHandler` 的执行不会阻塞新消息或事件的处理。
+
+这种设计确保了主线程能够及时响应用户的交互事件，同时也利用空闲时间执行额外的任务，如资源清理或数据预加载，而不会影响到用户界面的响应性。`IdleHandler` 提供了一种平衡主线程工作和利用空闲时间的机制，从而优化应用的性能和用户体验。
