@@ -1,4 +1,4 @@
-### 安卓内存优化
+# 安卓内存优化 - 内存泄漏检测实战
 
 飞书文档链接，建议飞书打开： [安卓内存优化](https://is0frj68ok.feishu.cn/wiki/HJN5wbVJZiY4AnkTjomcCuemnse?from=from_copylink)
 
@@ -21,7 +21,7 @@ Java 内存分配
 
 灰色区域：可被回收
 
-![img](https://is0frj68ok.feishu.cn/space/api/box/stream/download/asynccode/?code=OGMwYWI1ZTc5MGVjYjVhYWMyNDgyZGM3OTA5MzMxYTVfTG1hRXBaV0R2RE5NbWRkSnNsVWJEd21yRGtmZERjUzdfVG9rZW46V2hVTWJMTDRsbzBjZXB4NVI0SGMyYlhBbkVlXzE3MDg0ODk1ODA6MTcwODQ5MzE4MF9WNA)
+![img](https://is0frj68ok.feishu.cn/space/api/box/stream/download/asynccode/?code=OGI4MTE2ODdmOGNmMTYyMjBmNjkwZWQ2YzVmN2QxMjBfZ01FQ1pHMjhDUVpsMGlsVXRzUU1uVmx3UGZraEVvd2ZfVG9rZW46V2hVTWJMTDRsbzBjZXB4NVI0SGMyYlhBbkVlXzE3MDg0OTAxOTk6MTcwODQ5Mzc5OV9WNA)
 
 效率不高，需要扫两遍内存，产生大量不连续的内存碎片
 
@@ -31,7 +31,7 @@ Java 内存分配
 2. 一块内存用完之后复制到另一块
 3. 清理另一块
 
-![img](https://is0frj68ok.feishu.cn/space/api/box/stream/download/asynccode/?code=MGFiODc1Mzk1MDE2YTMzZTZmZjlkODczYmM4MzNlMTBfbGl5cXY2aTJacTFCY01sTXdnUk85QXNDVXA2MDlqVmZfVG9rZW46VDRSYWJOekNWbzFzeDR4amlRcWNFVVdmbnBlXzE3MDg0ODk1ODA6MTcwODQ5MzE4MF9WNA)
+![img](https://is0frj68ok.feishu.cn/space/api/box/stream/download/asynccode/?code=N2VkMTJkOWQwZmQ1ZDE4NmQ1ODM2MDBiZjE2M2I2OThfbk9nSVhYN0NWbVA5SFNXRFpoa1ZPQ09veVpxNVM0R05fVG9rZW46VDRSYWJOekNWbzFzeDR4amlRcWNFVVdmbnBlXzE3MDg0OTAxOTk6MTcwODQ5Mzc5OV9WNA)
 
 实现简单，运行高效（相对于前一个方法）
 
@@ -43,7 +43,7 @@ Java 内存分配
 2. 存活对象往一端进行移动
 3. 清理其余内存
 
-![img](https://is0frj68ok.feishu.cn/space/api/box/stream/download/asynccode/?code=Y2NiYmRmNzYwYzVlNDQ5NDJjZjYyYTNjYmUxNGM0ZmRfYnpNaTRLcE16ZFc5RThudkJoZks5akpKVTNXMmQ1MW5fVG9rZW46WjhlQ2I3WXA1b2lFU094VVp5NmMyRWtwblVjXzE3MDg0ODk1ODA6MTcwODQ5MzE4MF9WNA)
+![img](https://is0frj68ok.feishu.cn/space/api/box/stream/download/asynccode/?code=NTc5YjQ0MmY5NThkYzQ5ZjkwNDZmODdhYjJlZWE2NTZfVVBxeFpGbDl0RnNhZTZiVmUwUGJua1RDdTdtT3ZkdFBfVG9rZW46WjhlQ2I3WXA1b2lFU094VVp5NmMyRWtwblVjXzE3MDg0OTAxOTk6MTcwODQ5Mzc5OV9WNA)
 
 ### 分代收集算法
 
@@ -99,7 +99,7 @@ Low memory killer
 1. 查看：使用profile工具检测内存情况，重复执行进入然后退出一个activity，看activity实例是否还存在。如果activity实例还存在，很可能就出现了内存泄漏。
 2. 现象：反复进入A，然后退出A ，执行三次，可以看到A 的实例存在两个。如下图，VideoPlayerActivity：
 
-![img](https://is0frj68ok.feishu.cn/space/api/box/stream/download/asynccode/?code=NjVjM2MzMGZiNDg2ODZiNjA2NDlmNTA2NzU4ZTE1NjZfb2JxRUVlWFhzM2VtakxvWUtTUGlYdkV6REZUOGluUmNfVG9rZW46WU5uc2JuSWt1b1NrdUR4TTdNbmNkNWx0bnFiXzE3MDg0ODk1ODA6MTcwODQ5MzE4MF9WNA)
+![img](https://is0frj68ok.feishu.cn/space/api/box/stream/download/asynccode/?code=NTI0NGE3ZWM5ZjgyMDY5Y2YyNzhhYWE4M2VkZmVlNmZfUWJyaUJUODJZaUptQWJndUI0MkZBM2NTaVRKWTlpZ0pfVG9rZW46WU5uc2JuSWt1b1NrdUR4TTdNbmNkNWx0bnFiXzE3MDg0OTAxOTk6MTcwODQ5Mzc5OV9WNA)
 
 这就说明我们的activity并没有被销毁，至少目前是这样的。至于究竟会不会内存泄漏，就需要接下来使用另一款工具配合使用了。
 
@@ -109,7 +109,7 @@ Low memory killer
 
 通过一系列称为“GC Roots”的对象作为起始点，从这些节点向下搜索，搜索所有的引用链，当一个对象到GC Roots没有任何引用链（即GC Roots到对象不可达）时，则证明此对象是不可用的。也就会被回收。
 
-![img](https://is0frj68ok.feishu.cn/space/api/box/stream/download/asynccode/?code=MDRjNDIyYjJlNTQxZWRhMTY0ZWFmMjQ3ZDkyN2VjMDVfN056ZGF6aWVBbjJRMFQzclNmTjUzb3M1dUk1VzhkZjNfVG9rZW46Rm9ROGJKSHoxb0xsdGF4VmMwSmNVWEltblRjXzE3MDg0ODk1ODA6MTcwODQ5MzE4MF9WNA)
+![img](https://is0frj68ok.feishu.cn/space/api/box/stream/download/asynccode/?code=MDA5NDFkNjliMDFkZjdiYTNkMTNiOGIzN2ExYjZhZDRfRTBjbDg2SEJUY0p3Sm1MOEFodHFibnQwMkhZMFlsZnpfVG9rZW46Rm9ROGJKSHoxb0xsdGF4VmMwSmNVWEltblRjXzE3MDg0OTAxOTk6MTcwODQ5Mzc5OV9WNA)
 
 1. 何为GC Roots 对象，一般静态变量就是gc root对象，可以理解成生命周期很长的对象。
 2. 如何预防内存泄漏：
@@ -119,7 +119,7 @@ Low memory killer
 
 定义一些还有用但并非必须的对象。对于软引用关联的对象，GC不会直接回收，而是在系统将要内存溢出之前才会触发GC将这些对象进行回收。
 
-![img](https://is0frj68ok.feishu.cn/space/api/box/stream/download/asynccode/?code=YjM1ZjI3MDQzNGY2Zjc2MzA5ZWE3ODk3MjEyOTlkNjRfbnB1dG42Q0ZuS3FucU55VHl5VUZnRG1oU1phT2hHdHdfVG9rZW46SFRqa2JCUkY3b3l4M2x4SWJ1RmNVN2Q1bjFnXzE3MDg0ODk1ODA6MTcwODQ5MzE4MF9WNA)
+![img](https://is0frj68ok.feishu.cn/space/api/box/stream/download/asynccode/?code=NWYwZjkxOTNiZDJhODg2Mjc2N2Q2MzZiNjQxZjc1NDVfdzlSWXpNbmo2bnF5UXRzZTV4WG94dFpYMmQzSDR1a1pfVG9rZW46SFRqa2JCUkY3b3l4M2x4SWJ1RmNVN2Q1bjFnXzE3MDg0OTAxOTk6MTcwODQ5Mzc5OV9WNA)
 
 - 弱引用 ：
 
@@ -213,16 +213,28 @@ public class CallBackManager {
 
 在android studio自带的工具中，我们也可以发现已经内存泄漏了
 
-![img](https://is0frj68ok.feishu.cn/space/api/box/stream/download/asynccode/?code=Njk5ZjI0MDM5YmE5MzQ3YzE4N2IyNzFkMGJiMTQ1MDhfeG5LV2pqRTZOUkZvZ3RtSm10YnQxQTllZnlnR3hrZFNfVG9rZW46QWZiVGJLTjlpb0g2bW94bXpJRGNxaEJibnJkXzE3MDg0ODk1ODA6MTcwODQ5MzE4MF9WNA)
+![img](https://is0frj68ok.feishu.cn/space/api/box/stream/download/asynccode/?code=ZDM2ZjA3MzA0MjRjZmIzYjZkYWEyYmViMmJlNzM3YmJfUnphQVkyQUE3bW1IVHBEeEZUT29rWFNWekg0UThxS3VfVG9rZW46QWZiVGJLTjlpb0g2bW94bXpJRGNxaEJibnJkXzE3MDg0OTAxOTk6MTcwODQ5Mzc5OV9WNA)
 
 我们使用更高级的mat来检测内存泄漏
 
 **如下图，可以看到，一共有7个MemoryLeakActivity在内存中，这显然是不正常的**
 
-![img](https://is0frj68ok.feishu.cn/space/api/box/stream/download/asynccode/?code=M2U1Y2UxNjk5NmU1MjJhMWE5YmFhNGYzZmNlMjA0NzRfOXV2ZWJMZGFEMDJtWEFmUzFIcHRHMHFCTnlWMzFURFZfVG9rZW46VU1WTWJiMkFzb3plMHN4RTdBM2NUUUk1bnBlXzE3MDg0ODk1ODA6MTcwODQ5MzE4MF9WNA)
+![img](https://is0frj68ok.feishu.cn/space/api/box/stream/download/asynccode/?code=Zjk0MzAzYzJkZWUxZWUwMzAzY2EwMjEzZWQzNzY0MjVfY1BBUnl3R0NKdWRLMFZFTHEzM2dtYW5BUjN3cXBmc1dfVG9rZW46VU1WTWJiMkFzb3plMHN4RTdBM2NUUUk1bnBlXzE3MDg0OTAxOTk6MTcwODQ5Mzc5OV9WNA)
 
 右键，查看path to GC root，选择with all references, 可以得到如下结果：
 
-![img](https://is0frj68ok.feishu.cn/space/api/box/stream/download/asynccode/?code=OTlkMjQzYWFkZjVjMjIyNmU2YTg5Mzc5Y2Y3OTg5ZmNfbjVWNDBaMGhOOUpDaTZ2aVFtRGNFUkNGY2c1dHpEcWRfVG9rZW46R1BWc2JsREJSb1VvV2p4b2ltQWNuU3E1bjhjXzE3MDg0ODk1ODA6MTcwODQ5MzE4MF9WNA)
+![img](https://is0frj68ok.feishu.cn/space/api/box/stream/download/asynccode/?code=NjgxZmJkNDg3ZjhjZWZiZmYyYzBlNzNjYWQ2MTIwMDJfMUk3anBicnRyQWxSREFJNVpBWTkwQ0VTN0VvZzB2Y0tfVG9rZW46R1BWc2JsREJSb1VvV2p4b2ltQWNuU3E1bjhjXzE3MDg0OTAxOTk6MTcwODQ5Mzc5OV9WNA)
 
 可见是最终是因为 sCallBacks 是gc root，所以不会被垃圾回收。
+
+### 一些mat的使用经验
+
+我们拿到一份报告之后，先看到Histogram部分
+
+byte[]往往占比比较大，bitmap就是存储在byte[]中，所以它会比较大，我们查看byte[]到gc root的路径，看看有没有bytemap相关的泄漏
+
+![img](https://is0frj68ok.feishu.cn/space/api/box/stream/download/asynccode/?code=ZGQ1ZDdjODJlMzQwMGJjNzE3YzYwMjZkNGZkNmRlNDdfTHpjWGlLMllaSnl0d2hsb3dtUVZSSmYwMXRnSEt1YTRfVG9rZW46SkFCcGJjZmdob0dleXl4aGNVcWNESmxMbk5lXzE3MDg0OTAxOTk6MTcwODQ5Mzc5OV9WNA)
+
+结果如下，可以看到MemoryLeakActivity这个类出现了三次，很有可能有内存泄漏，再具体分析即可
+
+![img](https://is0frj68ok.feishu.cn/space/api/box/stream/download/asynccode/?code=ZTU5NzA2MTI2ZWFmODEzNmE4MzljNTY0MjgxMTAyOGZfNTdSb0M1ano5RkpvcTlieWtvVGFIS1NVTXl6OFl3RUNfVG9rZW46S2RBVmJvb3Znb0hiZ1R4M1haV2NoUWl2blRlXzE3MDg0OTAxOTk6MTcwODQ5Mzc5OV9WNA)
