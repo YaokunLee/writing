@@ -9,6 +9,7 @@ https://github.com/LiYaokun97/writing/blob/master/ui-banner/ui-banner.md
 
 ### 优化
 冷启动优化-任务执行框架 详解 https://github.com/LiYaokun97/writing/blob/master/performance/start.md
+安卓内存优化 - 内存泄漏检测及mat的使用 https://github.com/LiYaokun97/writing/blob/master/performance/memory.md
 
 ### 多线程
 安卓多线程 https://github.com/LiYaokun97/writing/blob/master/threads/threads_pool.md
