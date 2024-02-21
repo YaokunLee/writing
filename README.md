@@ -12,6 +12,8 @@ https://github.com/LiYaokun97/writing/blob/master/ui-banner/ui-banner.md
 
 安卓内存优化 - 内存泄漏检测及mat的使用 https://github.com/LiYaokun97/writing/blob/master/performance/memory.md
 
+安卓内存优化 - ARTHook优雅检测bitmap图片大小 https://github.com/LiYaokun97/writing/blob/master/performance/memory_arthook.md
+
 ### 多线程
 安卓多线程 https://github.com/LiYaokun97/writing/blob/master/threads/threads_pool.md
 
