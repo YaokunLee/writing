@@ -14,8 +14,12 @@ https://github.com/LiYaokun97/writing/blob/master/ui-banner/ui-banner.md
 
 安卓内存优化 - ARTHook优雅检测bitmap图片大小 https://github.com/LiYaokun97/writing/blob/master/performance/memory_arthook.md
 
+AOP框架在安卓优化中的多种应用 https://github.com/LiYaokun97/writing/blob/master/performance/aop.md
+
 ### 多线程
-安卓多线程 https://github.com/LiYaokun97/writing/blob/master/threads/threads_pool.md
+安卓多线程基础 https://github.com/LiYaokun97/writing/blob/master/threads/threads_pool.md
+
+Android 线程管理之 ThreadPoolExecutor 自定义线程池 https://github.com/LiYaokun97/writing/blob/master/threads/thread_pool2.md
 
 ### 权限库
 轮子哥权限库解析 https://github.com/LiYaokun97/writing/blob/master/permission/permission.md
