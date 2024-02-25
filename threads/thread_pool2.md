@@ -113,178 +113,136 @@ ThreadPoolExecutor(int corePoolSize,int maximumPoolSize,long keepAliveTime,TimeU
 
 　　shutdownNow()：立即终止线程池，并尝试打断正在执行的任务，并且清空任务缓存队列，返回尚未执行的任务
 
+
+
 ## **实现优先级线程池**
 
-#####     **1.）定义线程优先级枚举**
+#####  **1.）两种线程任务**：
 
-```Java
-/**
- * 线程优先级
- */
-public enum Priority {
-    HIGH, NORMAL, LOW
-}
-```
+1. 任务执行完有返回值的
+2. 任务执行完无返回值
 
-#####  **2.）定义线程任务**
+```kotlin
+abstract class Callable<T> : Runnable {
+    override fun run() {
+        mainHandler.post { onPrepare() }
 
-```Java
-/**
- * 带有优先级的Runnable类型
- */
-/*package*/ class PriorityRunnable implements Runnable {
+        val t: T? = onBackground()
 
-    public final Priority priority;//任务优先级
-    private final Runnable runnable;//任务真正执行者
-    /*package*/ long SEQ;//任务唯一标示
-
-    public PriorityRunnable(Priority priority, Runnable runnable) {
-        this.priority = priority == null ? Priority.NORMAL : priority;
-        this.runnable = runnable;
+        //移除所有消息.防止需要执行onCompleted了，onPrepare还没被执行，那就不需要执行了
+        mainHandler.removeCallbacksAndMessages(null)
+        mainHandler.post { onCompleted(t) }
     }
 
-    @Override
-    public final void run() {
-        this.runnable.run();
+    open fun onPrepare() {
+        //转菊花
+    }
+
+    abstract fun onBackground(): T?
+    abstract fun onCompleted(t: T?)
+}
+
+private class PriorityRunnable(val priority: Int, private val runnable: Runnable) : Runnable{
+    override fun run() {
+        runnable.run()
     }
 }
+
 ```
 
-##### **3.）定义一个PriorityExecutor继承ThreadPoolExecutor**
-
-```Java
-public class PriorityExecutor extends ThreadPoolExecutor {
-
-    private static final int CORE_POOL_SIZE = 5;//核心线程池大小
-    private static final int MAXIMUM_POOL_SIZE = 256;//最大线程池队列大小
-    private static final int KEEP_ALIVE = 1;//保持存活时间，当线程数大于corePoolSize的空闲线程能保持的最大时间。
-    private static final AtomicLong SEQ_SEED = new AtomicLong(0);//主要获取添加任务
-
-    /**
-     * 创建线程工厂
-     */
-    private static final ThreadFactory sThreadFactory = new ThreadFactory() {
-        private final AtomicInteger mCount = new AtomicInteger(1);
-
-        @Override
-        public Thread newThread(Runnable runnable) {
-            return new Thread(runnable, "download#" + mCount.getAndIncrement());
-        }
-    };
 
 
-    /**
-     * 线程队列方式 先进先出
-     */
-    private static final Comparator FIFO = new Comparator() {
-        @Override
-        public int compare(Runnable lhs, Runnable rhs) {
-            if (lhs instanceof PriorityRunnable && rhs instanceof PriorityRunnable) {
-                PriorityRunnable lpr = ((PriorityRunnable) lhs);
-                PriorityRunnable rpr = ((PriorityRunnable) rhs);
-                int result = lpr.priority.ordinal() - rpr.priority.ordinal();
-                return result == 0 ? (int) (lpr.SEQ - rpr.SEQ) : result;
+##### **2.）自定义PriorityExecutor继承ThreadPoolExecutor**
+
+以下代码中，有以下三点可以讲的：
+
+1. 优先级线程池是通过设置ThreadPoolExecutor 的 BlockingQueue 参数为 PriorityBlockingQueue 来实现的，它通过比较优先级。但是不能保证优先级高的最终就一定先执行
+2. 在beforeExecute 方法中，如果已经设置了暂停（isPaused），新的任务将不会被执行
+3. afterExecute方法中，可以加入监控代码，可以监控用时、当前线程数等
+
+```kotlin
+// 位于 HiExecutor 的init代码
+    init {
+        pauseCondition = lock.newCondition()
+
+        val cpuCount = Runtime.getRuntime().availableProcessors()
+        val corePoolSize = cpuCount + 1
+        val maxPoolSize = cpuCount * 2 + 1
+
+        val FIFO: Comparator<*> = Comparator<Any?> { lhs, rhs ->
+            if (lhs is PriorityRunnable &&
+                rhs is PriorityRunnable) {
+                if (lhs.priority < rhs.priority) 1 else if (lhs.priority > rhs.priority) -1 else 0
             } else {
-                return 0;
+                0
             }
         }
-    };
+        val blockingQueue: PriorityBlockingQueue<out Runnable> = PriorityBlockingQueue(256, FIFO)
+        val keepAliveTime = 30L
+        val unit = TimeUnit.SECONDS
 
-    /**
-     * 线程队列方式 后进先出
-     */
-    private static final Comparator LIFO = new Comparator() {
-        @Override
-        public int compare(Runnable lhs, Runnable rhs) {
-            if (lhs instanceof PriorityRunnable && rhs instanceof PriorityRunnable) {
-                PriorityRunnable lpr = ((PriorityRunnable) lhs);
-                PriorityRunnable rpr = ((PriorityRunnable) rhs);
-                int result = lpr.priority.ordinal() - rpr.priority.ordinal();
-                return result == 0 ? (int) (rpr.SEQ - lpr.SEQ) : result;
-            } else {
-                return 0;
+        val seq = AtomicLong()
+        val threadFactory = ThreadFactory {
+            val thread = Thread(it)
+            //hi-executor-0
+            thread.name = "hi-executor-" + seq.getAndIncrement()
+            return@ThreadFactory thread
+        }
+
+        hiExecutor = object : ThreadPoolExecutor(
+            corePoolSize,
+            maxPoolSize,
+            keepAliveTime,
+            unit,
+            blockingQueue as BlockingQueue<Runnable>,
+            threadFactory
+        ) {
+            
+            override fun beforeExecute(t: Thread?, r: Runnable?) {
+                if (isPaused) {
+                    lock.lock()
+                    try {
+                        pauseCondition.await()
+                    } finally {
+                        lock.unlock()
+                    }
+                }
+            }
+
+            override fun afterExecute(r: Runnable?, t: Throwable?) {
+                //监控线程池耗时任务,线程创建数量,正在运行的数量
+
             }
         }
-    };
-
-    /**
-     * 默认工作线程数5
-     *
-     * @param fifo 优先级相同时, 等待队列的是否优先执行先加入的任务.
-     */
-    public PriorityExecutor(boolean fifo) {
-        this(CORE_POOL_SIZE, fifo);
     }
 
-    /**
-     * @param poolSize 工作线程数
-     * @param fifo     优先级相同时, 等待队列的是否优先执行先加入的任务.
-     */
-    public PriorityExecutor(int poolSize, boolean fifo) {
-        this(poolSize, MAXIMUM_POOL_SIZE, KEEP_ALIVE, TimeUnit.SECONDS, new PriorityBlockingQueue(MAXIMUM_POOL_SIZE, fifo ? FIFO : LIFO), sThreadFactory);
-    }
-
-    public PriorityExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue workQueue, ThreadFactory threadFactory) {
-        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
-    }
-
-    /**
-     * 判断当前线程池是否繁忙
-     * @return
-     */
-    public boolean isBusy() {
-        return getActiveCount() >= getCorePoolSize();
-    }
-
-    /**
-     * 提交任务
-     * @param runnable
-     */
-    @Override
-    public void execute(Runnable runnable) {
-        if (runnable instanceof PriorityRunnable) {
-            ((PriorityRunnable) runnable).SEQ = SEQ_SEED.getAndIncrement();
-        }
-        super.execute(runnable);
-    }
-}
 ```
 
-里面定义了两种线程队列模式： FIFO（先进先出） LIFO（后进先出） 优先级相同的按照提交先后排序
+
 
 ##### **4.）测试程序**
 
-```Java
- ExecutorService executorService = new PriorityExecutor(5, false);
-        for (int i = 0; i < 20; i++) {
-            PriorityRunnable priorityRunnable = new PriorityRunnable(Priority.NORMAL, new Runnable() {
-                @Override
-                public void run() {
-                    Log.e(TAG, Thread.currentThread().getName()+"优先级正常");
-                }
-            });
-            if (i % 3 == 1) {
-                priorityRunnable = new PriorityRunnable(Priority.HIGH, new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.e(TAG, Thread.currentThread().getName()+"优先级高");
-                    }
-                });
-            } else if (i % 5 == 0) {
-                priorityRunnable = new PriorityRunnable(Priority.LOW, new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.e(TAG, Thread.currentThread().getName()+"优先级低");
-                    }
-                });
-            }
-            executorService.execute(priorityRunnable);
+```kotlin
+    private fun testThreadPool(){
+        for (i in 1..10) {
+            HiExecutor.execute(1, Runnable {
+                Log.i(TAG, "priority 1 sleep start")
+                Thread.sleep(100)
+                Log.i(TAG, "priority 1 sleep end")
+            })
+
+            HiExecutor.execute(10, Runnable {
+                Log.i(TAG, "priority 10 sleep start")
+                Thread.sleep(100)
+                Log.i(TAG, "priority 10 sleep end")
+            })
         }
+    }
 ```
 
 运行结果：不难发现优先级高基本上优先执行了 最后执行的基本上优先级比较低
 
-![img](https://is0frj68ok.feishu.cn/space/api/box/stream/download/asynccode/?code=M2U4MTAyYzcxYjEzMmQyYjIwZWZmN2U1ZTE5ZGJmM2RfMXNBNWhVRHpZOVFvbm9BQ2g0U0Jua0phVFl0VUJteFRfVG9rZW46U3ZGMWJHWVpXb0RDRm94RG9WZGM5c3hkbkNkXzE3MDg2NzQ0MDM6MTcwODY3ODAwM19WNA)
+
 
 ## 异步结果主动回调主线程
 
