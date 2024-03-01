@@ -1,6 +1,6 @@
 # 自定义路由框架详解（三）- 生成文档
 
-
+仅仅使用Destination注解来注册Activity还不够，当下游业务方需要通过Router调用activity时，需要知道对应的activity的Router路径是什么。这就要求我们提供一张包括所有注册了的activity的总文档，当程序员需要调用时，可以查看这张总表，来获得准确的路径。
 
 这一步需要把所有projects 生成的RouterMapping_xxxx.java类汇总起来，生成一个记录了所有注册的类的文档。
 
