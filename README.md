@@ -12,5 +12,7 @@
 | 多线程 | Android 线程管理之 ThreadPoolExecutor 自定义线程池 | [点击查看](https://github.com/LiYaokun97/writing/blob/master/threads/thread_pool2.md) |
 | 权限库 | 轮子哥权限库解析 | [点击查看](https://github.com/LiYaokun97/writing/blob/master/permission/permission.md) |
 | Router | 自定义路由框架详解（一）前置知识 Groovy进阶语法 | [点击查看](https://github.com/LiYaokun97/writing/blob/master/router/router1.md) |
-| Router | 自定义路由框架详解（二） | [点击查看](https://github.com/LiYaokun97/writing/blob/master/router/router2.md) |
-
+| Router | 自定义路由框架详解（二）- 标记页面、收集页面 | [点击查看](https://github.com/LiYaokun97/writing/blob/master/router/router2.md) |
+| Router | 自定义路由框架详解（三）- 生成文档 | [点击查看](https://github.com/LiYaokun97/writing/blob/master/router/router3.md) |
+| Router | **自定义路由框架详解（四）- 注册映射** | [点击查看](https://github.com/LiYaokun97/writing/blob/master/router/router4.md) |
+| Router | 自定义路由框架详解（五）- 打开页面 | [点击查看](https://github.com/LiYaokun97/writing/blob/master/router/router5.md) |
