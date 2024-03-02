@@ -10,7 +10,7 @@ typora-copy-images-to: ./image
 
 但当下游调用者需要通过router路径跳转时，我们必须保证内存中有一份汇聚了每个子工程注册的总表，查找到对应的类之后跳转，而这，正是我们这一步需要完成的。
 
-![](image/router4_1.jpg)
+![](image/image-20240301144255965.png)
 
 这一步，我们需要用到的技术是字节码插桩，让我们先简单介绍一下字节码插桩
 
@@ -34,7 +34,7 @@ Java中的字节码是Java源代码被Java编译器编译后的中间代码形�
 
 下图是安卓打包的过程，插桩的时间在由.class文件到.dex文件之间
 
-![image-20240301150908603](image/image-20240301150908603.png)
+![](image/image-20240301150908603.png)
 
 我们需要在自定义的gradle插件里，注册一个Transform接口，就可以在对应的回调里收到所有编译好的.class字节码，然后我们再使用ASM工具对字节码进行解析和修改
 
@@ -118,8 +118,6 @@ class RouterMappingTransform extends Transform {
 
 简单解释一下上面的几个方法
 
-
-
 getInputTypes，*告知编译器，当前Transform需要消费的输入类型*
 
 \>>>> 插入
@@ -127,18 +125,11 @@ getInputTypes，*告知编译器，当前Transform需要消费的输入类型*
 在Android构建系统中，`QualifiedContent.ContentType`定义了`Transform`可以处理的输入类型。`CONTENT_CLASS`是其中一种类型，专门指代编译后的Java类文件（`.class`文件）。除了`CONTENT_CLASS`，还有其他几种选项，允许`Transform`针对不同的内容进行操作：
 
 1. `CONTENT_CLASS`: 如之前所述，这代表编译后的Java类文件。
-
 2. `CONTENT_RESOURCES`: 指代与Java类不同的资源文件，比如图片、XML布局文件等。这使得`Transform`可以操作除了代码之外的资源，以实现资源的优化、检查或修改等操作。
-
 3. `CONTENT_DEX`: 在某些情况下，`Transform`可能需要直接操作或分析DEX文件（Dalvik可执行文件），这是Android平台上应用的最终执行格式。`CONTENT_DEX`允许`Transform`在DEX级别上进行操作，如DEX文件的合并、优化或修改。
-
 4. `CONTENT_JARS`: 这通常指代包含编译后Java类的JAR文件。对于那些需要在JAR级别而不是单独类文件级别上进行操作的`Transform`来说，这是一个有用的选项。例如，可能需要修改或替换JAR文件中的某些类或资源。
-
 5. `CONTENT_NATIVE_LIBS`: 指代应用中使用的本地库文件（如.so文件）。这允许`Transform`对这些本地库进行操作，比如重命名、移动或修改它们。
-
 6. `CONTENT_ASSETS`: 指代应用的assets文件夹中的内容，可以包括任何类型的文件，如文本、音频或视频文件。`Transform`可以对这些文件执行操作，如添加、删除或修改。
-
-   
 
 getScopes *告知编译器，当前Transform需要收集的范围*
 
@@ -157,8 +148,6 @@ getScopes *告知编译器，当前Transform需要收集的范围*
 
 通过精确地控制作用范围，`Transform`能够更有效地执行，同时避免不必要的处理，从而优化构建过程的性能。
 
-
-
 isIncremental 是否支持增量编译
 
 \>>>> 插入
@@ -173,9 +162,7 @@ isIncremental 是否支持增量编译
 
 因此，实现增量编译支持可以显著提高构建效率，特别是在大型项目中，但同时也增加了`Transform`开发的复杂性。开发者在设计`Transform`时需要权衡是否实现增量编译支持以及如何实现，以达到构建性能和开发维护成本之间的最佳平衡。
 
-
-
-现在看到transform方法中的内容：
+关键看到transform方法中的内容：
 
 在`transform`方法中，遍历所有的输入文件（包括目录输入和JAR输入，也就是下面代码中的it.directoryInputs.each 和 it.jarInputs.each），并对它们进行处理。我们调用了RouterMappingCollector 中的collect方法，来收集所有相关的类名（也就是RouterMapping_xxx.java，这是在第二步中生成的）
 
@@ -590,14 +577,28 @@ map.putAll(RouterMapping_x.get())
 
 这段代码为例子，来学习一下ASM 使用的基础
 
-### `mv.visitVarInsn(ALOAD, 0)`
+```
+mv.visitVarInsn(ALOAD, 0)
+```
 
 - `visitVarInsn`方法用于访问局部变量表中的变量。
 - `ALOAD`是指令的操作码，表示加载一个引用类型的局部变量到操作数栈上。`ALOAD_0`通常用于加载`this`引用（对于实例方法）或是方法的第一个静态参数（对于静态方法）到栈顶。
 - 在这个上下文中，`0`是变量的索引，指示加载方法的第一个参数（这里是静态方法中的局部变量，即刚刚创建的`HashMap`实例）到栈顶。这是准备将新的映射添加到这个`Map`实例中的前置步骤。
 
-### `mv.visitMethodInsn`
+```
+mv.visitMethodInsn
+```
 
 - `visitMethodInsn`方法用于生成方法调用指令。
 - `INVOKESTATIC`指令用于调用一个静态方法。在这个例子中，它调用的是`"com/imooc/router/mapping/$it".get()`方法，该方法返回一个`Map`对象。`$it`是一个在循环中使用的变量，代表`allMappingNames`集合中的当前元素。
 - 第二个`visitMethodInsn`调用使用的是`INVOKEINTERFACE`指令，这是因为它调用的是`Map`接口的`putAll`方法，将上一步得到的映射表内容添加到先前创建的`HashMap`中。
+
+### 相关链接
+
+具体的字节码插桩实践可以看该文：https://juejin.cn/post/7129381154121056292
+
+ASM document [3] 中详细介绍了相关的类，及使用方法
+
+Android ASM快速入门 （实现了activity生命周期方法开始、结束打印日志） https://www.jianshu.com/p/d5333660e312
+
+AOP（Aspect-Oriented Programming，面向切面编程) https://www.jianshu.com/p/1109a4724b16
