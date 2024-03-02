@@ -1,7 +1,3 @@
----
-typora-copy-images-to: ./image
----
-
 # 自定义路由框架详解（四）- 注册映射
 
 飞书链接：[自定义路由框架详解（四）- 注册映射](https://is0frj68ok.feishu.cn/wiki/Ahutwn0YziO8BdkIqnmcbdnFnZr?from=from_copylink)
